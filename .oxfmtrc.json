@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "singleQuote": false,
+  "sortImports": {
+    "newlinesBetween": true,
+    "customGroups": [
+      { "groupName": "effect", "elementNamePattern": ["effect", "effect/**"] },
+      { "groupName": "effect-scoped", "elementNamePattern": ["@effect/**"] },
+      { "groupName": "alias", "elementNamePattern": ["@/**"] }
+    ],
+    "groups": [
+      "effect",
+      "effect-scoped",
+      "builtin",
+      "external",
+      ["alias", "internal", "parent", "sibling", "index"],
+      "unknown"
+    ]
+  }
+}

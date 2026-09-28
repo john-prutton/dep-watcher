@@ -1,0 +1,40 @@
+{
+  "name": "@john-prutton/dep-watcher",
+  "version": "0.0.1",
+  "bin": {
+    "dep-watcher": "dist/dep-watcher.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "prepublishOnly": "pnpm clean && pnpm build",
+    "build": "tsc --noEmit && rolldown -c rolldown.config.js",
+    "dev": "pnpm build && node dist/dep-watcher.js",
+    "clean": "rm -rf ./dist",
+    "prepare": "effect-tsgo patch --typescript --no-oxlint",
+    "lint": "oxlint",
+    "format": "oxfmt"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.0.0-rc.117",
+    "@effect/tsgo": "0.46.1",
+    "@types/node": "^26.6.3",
+    "effect": "4.0.0-rc.117",
+    "oxfmt": "^0.70.0",
+    "oxlint": "^1.85.0",
+    "rolldown": "^1.2.11",
+    "typescript": "^7.0.2"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^12.6.0",
+      "onFail": "download"
+    }
+  }
+}
