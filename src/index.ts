@@ -49,5 +49,6 @@ Command.make(
     version: __VERSION__,
   }),
   Effect.provide(NodeServices.layer),
+  Effect.catchTag("PathDneError", (e) => Effect.logError("These paths DNE:", e.paths)),
   Effect.runPromise,
 )
