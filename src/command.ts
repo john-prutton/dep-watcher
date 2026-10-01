@@ -12,7 +12,7 @@ export const runCommand = (command: string, keepOutput: boolean) =>
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
 
     if (!keepOutput) yield* spawner.exitCode(cls)
-
     const exitCode = yield* spawner.exitCode(childProcess)
-    yield* Effect.logDebug("command exited with", exitCode)
+
+    yield* Effect.log("Command exited with", exitCode)
   })
