@@ -4,6 +4,8 @@ import * as Effect from "effect/Effect"
 import * as ChildProcess from "effect/unstable/process/ChildProcess"
 import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner"
 
+import { styleText } from "node:util"
+
 const cls = ChildProcess.make("clear", { stdout: "inherit" })
 
 export const makeCommand = (command: string, keepOutput: boolean) =>
@@ -14,6 +16,8 @@ export const makeCommand = (command: string, keepOutput: boolean) =>
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
 
     if (!keepOutput) yield* spawner.exitCode(cls)
+
+    yield* Effect.log("Running command", styleText("dim", command))
     const [duration, exitCode] = yield* Effect.timed(spawner.exitCode(childProcess))
 
     if (exitCode !== 0) return yield* new CommandFailed({ command, duration })
