@@ -1,5 +1,7 @@
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
+import * as Fiber from "effect/Fiber"
+import * as FiberHandle from "effect/FiberHandle"
 import * as Stream from "effect/Stream"
 import * as Argument from "effect/unstable/cli/Argument"
 import * as Command from "effect/unstable/cli/Command"
@@ -7,7 +9,7 @@ import * as Flag from "effect/unstable/cli/Flag"
 
 import * as NodeServices from "@effect/platform-node/NodeServices"
 
-import { runCommand } from "./command.js"
+import { makeCommand } from "./command.js"
 import { debouncedWatchStream } from "./watch.js"
 
 declare const __VERSION__: string
@@ -40,10 +42,27 @@ Command.make(
   },
 
   ({ cmd, debounceDuration, keepOutput, paths }) =>
-    debouncedWatchStream(paths, Duration.millis(debounceDuration)).pipe(
-      Stream.unwrap,
-      Stream.runForEach(() => runCommand(cmd, keepOutput)),
-    ),
+    Effect.gen(function* () {
+      const cmds = cmd.split("&&").map((cmd) => makeCommand(cmd.trim(), keepOutput))
+      const cmdStream = Stream.fromIterable(cmds)
+
+      const fileEventStream = yield* debouncedWatchStream(paths, Duration.millis(debounceDuration))
+
+      let fiber: Fiber.Fiber<void> | null = null
+
+      yield* Stream.runForEach(fileEventStream, () =>
+        Effect.gen(function* () {
+          if (Fiber.isFiber(fiber)) {
+            if (!fiber.pollUnsafe()) yield* Effect.log("Interuptting command")
+            yield* Fiber.interrupt(fiber)
+          }
+
+          fiber = yield* Effect.forkDetach(
+            Stream.runForEach(cmdStream, (a) => a.pipe(Effect.catch((e) => Effect.die(e.message)))),
+          )
+        }),
+      )
+    }),
 ).pipe(
   Command.run({
     version: __VERSION__,
