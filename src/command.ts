@@ -10,8 +10,7 @@ const cls = ChildProcess.make("clear", { stdout: "inherit" })
 
 export const makeCommand = (command: string, keepOutput: boolean) =>
   Effect.gen(function* () {
-    const [cmd, ...args] = command.split(" ")
-    const childProcess = ChildProcess.make(cmd!, args, { stdout: "inherit" })
+    const childProcess = ChildProcess.make(command, { stdout: "inherit", shell: true })
 
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner
 

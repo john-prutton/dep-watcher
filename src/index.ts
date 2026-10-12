@@ -19,7 +19,8 @@ Command.make(
   {
     cmd: Flag.String("cmd").pipe(
       Flag.withAlias("c"),
-      Flag.withDescription("Command to run on file changes"),
+      Flag.atLeast(1),
+      Flag.withDescription("Command to run on file changes, can provide multiple"),
     ),
 
     debounceDuration: Flag.Int("debounce").pipe(
@@ -42,7 +43,7 @@ Command.make(
 
   ({ cmd, debounceDuration, keepOutput, paths }) =>
     Effect.gen(function* () {
-      const cmds = cmd.split("&&").map((cmd) => makeCommand(cmd.trim(), keepOutput))
+      const cmds = cmd.map((cmd) => makeCommand(cmd.trim(), keepOutput))
       const cmdStream = Stream.fromIterable(cmds)
 
       const fileEventStream = yield* debouncedWatchStream(paths, Duration.millis(debounceDuration))
