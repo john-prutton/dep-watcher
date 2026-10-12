@@ -1,7 +1,6 @@
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Fiber from "effect/Fiber"
-import * as FiberHandle from "effect/FiberHandle"
 import * as Stream from "effect/Stream"
 import * as Argument from "effect/unstable/cli/Argument"
 import * as Command from "effect/unstable/cli/Command"
