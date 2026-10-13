@@ -9,6 +9,7 @@ import * as Flag from "effect/unstable/cli/Flag"
 import * as NodeServices from "@effect/platform-node/NodeServices"
 
 import { makeCommand } from "./command.js"
+import { restartStream } from "./restart.js"
 import { debouncedWatchStream } from "./watch.js"
 
 declare const __VERSION__: string
@@ -20,7 +21,9 @@ Command.make(
     cmd: Flag.String("cmd").pipe(
       Flag.withAlias("c"),
       Flag.atLeast(1),
-      Flag.withDescription("Command to run on file changes, can provide multiple"),
+      Flag.withDescription(
+        "Command to run on file changes, can provide multiple, can be restarted with r+enter",
+      ),
     ),
 
     debounceDuration: Flag.Int("debounce").pipe(
@@ -47,10 +50,15 @@ Command.make(
       const cmdStream = Stream.fromIterable(cmds)
 
       const fileEventStream = yield* debouncedWatchStream(paths, Duration.millis(debounceDuration))
+      const heartBeatStream = Stream.make("heart-beat" as const)
+      const fullStream = fileEventStream.pipe(
+        Stream.merge(restartStream),
+        Stream.merge(heartBeatStream),
+      )
 
       let fiber: Fiber.Fiber<void> | null = null
 
-      yield* Stream.runForEach(fileEventStream, () =>
+      yield* Stream.runForEach(fullStream, () =>
         Effect.gen(function* () {
           if (Fiber.isFiber(fiber)) {
             if (!fiber.pollUnsafe()) yield* Effect.log("Interuptting command")

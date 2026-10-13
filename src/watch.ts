@@ -16,10 +16,9 @@ export const debouncedWatchStream = (paths: readonly string[], duration: Duratio
     const watchStream = Stream.merge(
       yield* fileWatchStream(files),
       yield* directoryWatchStream(dirs),
-    )
-    const heartbeatStream = Stream.make("heart-beat" as const)
+    ).pipe(Stream.debounce(duration))
 
-    return Stream.merge(watchStream, heartbeatStream).pipe(Stream.debounce(duration))
+    return watchStream
   })
 
 const ensurePathsExist = Effect.fnUntraced(function* (paths: readonly string[]) {
