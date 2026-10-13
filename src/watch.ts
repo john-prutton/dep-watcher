@@ -7,7 +7,7 @@ import * as Stream from "effect/Stream"
 
 export const debouncedWatchStream = (paths: readonly string[], duration: Duration.Duration) =>
   Effect.gen(function* () {
-    yield* Effect.logDebug("watching paths", paths, "with debounce duration", duration.toString())
+    yield* Effect.logDebug("watching", paths, "with debounce duration", duration.toString())
 
     yield* ensurePathsExist(paths)
 
@@ -63,8 +63,7 @@ const directoryWatchStream = Effect.fnUntraced(function* (dirs: string[]) {
   const { watch } = yield* FileSystem.FileSystem
 
   return Stream.fromIterable(dirs).pipe(
-    Stream.map((dirPath) => watch(dirPath, { recursive: true })),
-    Stream.flatten,
+    Stream.flatMap((dir) => watch(dir, { recursive: true }), { concurrency: "unbounded" }),
   )
 })
 
@@ -74,10 +73,11 @@ const fileWatchStream = Effect.fnUntraced(function* (filePaths: string[]) {
   const { watch } = yield* FileSystem.FileSystem
 
   return Stream.fromIterable(dirToFiles.entries()).pipe(
-    Stream.map(([dir, files]) =>
-      watch(dir, { recursive: false }).pipe(Stream.filter((event) => files.has(event.path))),
+    Stream.flatMap(
+      ([dir, files]) =>
+        watch(dir, { recursive: false }).pipe(Stream.filter((event) => files.has(event.path))),
+      { concurrency: "unbounded" },
     ),
-    Stream.flatten,
   )
 })
 
